@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import config from "../../config";
 import { googleClient } from "../../lib/googleAuth";
-import { TokenPayload } from "google-auth-library";
+import type { TokenPayload } from "google-auth-library";
 import type { JwtPayload, SignOptions } from "jsonwebtoken";
 import { Role, UserStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
@@ -89,6 +89,12 @@ const loginUser = async (payload: ILoginUserPayload) => {
 
 	if (user.isDeleted || user.status === UserStatus.DELETED) {
 		throw new Error("User is deleted");
+	}
+
+	if (user.password === null && user.googlId !== null) {
+		throw new Error(
+			"User already registered with google account.Please try to login in with google",
+		);
 	}
 
 	const isPasswordMatched = await bcrypt.compare(
@@ -218,7 +224,7 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 		throw new Error("Google user name not found");
 	}
 
-	const ifPatientExistWithGooleAuth = await prisma.user.findUnique({
+	const ifPatientExistWithGoogleAuth = await prisma.user.findUnique({
 		where: {
 			email: googleIdTokenPayload.email,
 			role: "PATIENT",
@@ -226,9 +232,9 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 		},
 	});
 
-	let user = ifPatientExistWithGooleAuth;
+	let user = ifPatientExistWithGoogleAuth;
 
-	if (!ifPatientExistWithGooleAuth) {
+	if (!ifPatientExistWithGoogleAuth) {
 		const ifPatientExistWithCredentials = await prisma.user.findUnique({
 			where: {
 				email: googleIdTokenPayload.email,
@@ -270,6 +276,7 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 					role: Role.PATIENT,
 					googlId: googleIdTokenPayload.sub,
 					authProvider: "GOOGLE",
+					emailVerified: true,
 					patient: {
 						create: {
 							name: googleIdTokenPayload.name,
