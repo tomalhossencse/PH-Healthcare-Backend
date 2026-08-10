@@ -21,6 +21,12 @@
             },
             "complexity": {
                 "noCommaOperator": "warn"
+            },
+            "correctness": {
+                "noUnusedFunctionParameters": "off"
+            },
+            "style": {
+                "useImportType": "off"
             }
         }
     },
@@ -33,7 +39,7 @@
         "enabled": true,
         "actions": {
             "source": {
-                "organizeImports": "on"
+                "organizeImports": "off"
             }
         }
     }

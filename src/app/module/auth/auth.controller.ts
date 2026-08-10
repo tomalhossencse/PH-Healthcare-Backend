@@ -6,8 +6,11 @@ import type { IRequestUser } from "./auth.interface";
 import { AuthService } from "./auth.service";
 
 const registerPatient = catchAsync(async (req: Request, res: Response) => {
-	const payload = req.body;
-	const result = await AuthService.registerPatient(payload);
+	// const payload = PataintRegZodSchema.safeParse(req.body);
+	// if (!payload.success) {
+	// 	throw new Error(payload.error.issues[0].message);
+	// }
+	const result = await AuthService.registerPatient(req.body);
 
 	const { accessToken, refreshToken, user, patient } = result;
 

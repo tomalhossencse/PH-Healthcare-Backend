@@ -10,6 +10,7 @@ import config from "./app/config";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import { notFound } from "./app/middleware/notFound";
 import { AuthRoutes } from "./app/module/auth/auth.route";
+import z from "zod";
 
 const app: Application = express();
 
@@ -28,6 +29,24 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/v1/auth", AuthRoutes);
+
+app.post("/zod", async (req: Request, res: Response) => {
+	const UserZodSchema = z.object({
+		name: z.string("Name must be string"),
+		age: z.number(),
+	});
+
+	const payload = req.body;
+
+	const result = UserZodSchema.parse(payload);
+
+	console.log(result);
+
+	res.status(httpStatus.OK).json({
+		success: true,
+		message: "Welcome to PH Healthcare System Backend",
+	});
+});
 
 // Basic route
 app.get("/", async (req: Request, res: Response) => {
