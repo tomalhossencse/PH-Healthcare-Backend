@@ -1,7 +1,7 @@
 import { auth } from "../../middleware/checkAuth";
 import { AuthController } from "./auth.controller";
 import { Role } from "../../../generated/prisma/enums";
-import { PataintRegZodSchema } from "./auth.validation";
+import { LoginZodSchema, PataintRegZodSchema } from "./auth.validation";
 import { Router } from "express";
 import { validationRequest } from "../../middleware/validateRequest";
 
@@ -12,7 +12,11 @@ router.post(
 	validationRequest(PataintRegZodSchema),
 	AuthController.registerPatient,
 );
-router.post("/login", AuthController.loginUser);
+router.post(
+	"/login",
+	validationRequest(LoginZodSchema),
+	AuthController.loginUser,
+);
 router.get(
 	"/me",
 	auth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN),
