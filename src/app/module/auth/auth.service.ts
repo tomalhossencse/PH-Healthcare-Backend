@@ -6,6 +6,7 @@ import type { JwtPayload, SignOptions } from "jsonwebtoken";
 import { Role, UserStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import { jwtUtils } from "../../utils/jwt";
+import ejs from "ejs";
 import type {
 	IForgetPasswordPayload,
 	IGoogleLoginPayload,
@@ -18,6 +19,7 @@ import { any } from "zod";
 import crypto from "crypto";
 import { radisClient } from "../../lib/radis";
 import { transporter } from "../../lib/nodemailer";
+import path from "path";
 
 const registerPatient = async (payload: IRegisterPatientPayload) => {
 	const { name, password } = payload;
@@ -359,19 +361,33 @@ const forgetPassword = async (payload: IForgetPasswordPayload) => {
 
 	const otp = crypto.randomInt(100000, 1000000).toString();
 	const key = `forget-password-otp:${isUserExist.email}`;
+	const expirationSeconds = 120;
 
 	await radisClient.set(key, otp, {
 		expiration: {
 			type: "EX",
-			value: 120,
+			value: expirationSeconds,
 		},
 	});
+
+	const templatePath = path.join(
+		process.cwd(),
+		"src/app/templates/forget-password.ejs",
+	);
+
+	const templateData = {
+		name: isUserExist.name,
+		otp,
+		expirationMinutes: expirationSeconds / 60,
+	};
+
+	const html = await ejs.renderFile(templatePath, templateData);
 
 	await transporter.sendMail({
 		from: config.email_sender,
 		to: isUserExist.email,
 		subject: "Forget Password",
-		html: `<h2>Your OTP is : <B>${otp}</B></h2>`,
+		html,
 	});
 };
 
@@ -428,6 +444,24 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 	});
 
 	await radisClient.del([key]);
+
+	const templatePath = path.join(
+		process.cwd(),
+		"src/app/templates/reset-password.ejs",
+	);
+
+	const templateData = {
+		name: isUserExist.name,
+	};
+
+	const html = await ejs.renderFile(templatePath, templateData);
+
+	await transporter.sendMail({
+		from: config.email_sender,
+		to: isUserExist.email,
+		subject: "Password change",
+		html,
+	});
 };
 
 export const AuthService = {
