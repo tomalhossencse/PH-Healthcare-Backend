@@ -17,6 +17,7 @@ import type {
 import { any } from "zod";
 import crypto from "crypto";
 import { radisClient } from "../../lib/radis";
+import { transporter } from "../../lib/nodemailer";
 
 const registerPatient = async (payload: IRegisterPatientPayload) => {
 	const { name, password } = payload;
@@ -364,6 +365,13 @@ const forgetPassword = async (payload: IForgetPasswordPayload) => {
 			type: "EX",
 			value: 120,
 		},
+	});
+
+	await transporter.sendMail({
+		from: config.email_sender,
+		to: isUserExist.email,
+		subject: "Forget Password",
+		html: `<h2>Your OTP is : <B>${otp}</B></h2>`,
 	});
 };
 

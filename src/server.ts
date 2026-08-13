@@ -1,5 +1,6 @@
 import app from "./app";
 import config from "./app/config";
+import { transporter } from "./app/lib/nodemailer";
 import { prisma } from "./app/lib/prisma";
 import { radisClient } from "./app/lib/radis";
 import {
@@ -17,6 +18,9 @@ const main = async () => {
 
 		await radisClient.connect();
 		console.log("❤️  Radis connected successfully.");
+
+		await transporter.verify();
+		console.log("Nodemailer connected successfully");
 
 		// await seedSuperAdmin();
 		// await seedTesterAdmin();
