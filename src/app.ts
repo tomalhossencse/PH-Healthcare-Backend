@@ -11,6 +11,8 @@ import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import { notFound } from "./app/middleware/notFound";
 import { AuthRoutes } from "./app/module/auth/auth.route";
 import z from "zod";
+import { radisClient } from "./app/lib/radis";
+import crypto from "crypto";
 
 const app: Application = express();
 
@@ -30,22 +32,23 @@ app.use(cookieParser());
 
 app.use("/api/v1/auth", AuthRoutes);
 
-app.post("/zod", async (req: Request, res: Response) => {
-	const UserZodSchema = z.object({
-		name: z.string("Name must be string"),
-		age: z.number(),
-	});
+app.get("/test", async (req: Request, res: Response) => {
+	try {
+		const otp = crypto.randomInt(100000, 1000000);
+		console.log(otp);
 
-	const payload = req.body;
-
-	const result = UserZodSchema.parse(payload);
-
-	console.log(result);
-
-	res.status(httpStatus.OK).json({
-		success: true,
-		message: "Welcome to PH Healthcare System Backend",
-	});
+		// await radisClient.set("forget-password-otp:patient@gmail.com", "123434", {
+		// 	expiration: {
+		// 		type: "EX",
+		// 		value: 60,
+		// 	},
+		// });
+		res.status(httpStatus.OK).json({
+			success: true,
+			message: "Welcome to PH Healthcare System Backend",
+			data: { otp },
+		});
+	} catch (error) {}
 });
 
 // Basic route
