@@ -6,13 +6,18 @@ import type { IRequestUser } from "./auth.interface";
 import { AuthService } from "./auth.service";
 
 const registerPatient = catchAsync(async (req: Request, res: Response) => {
-	// const payload = PataintRegZodSchema.safeParse(req.body);
-	// if (!payload.success) {
-	// 	throw new Error(payload.error.issues[0].message);
-	// }
-	const result = await AuthService.registerPatient(req.body);
+	await AuthService.registerPatient(req.body);
+	sendResponse(res, {
+		statusCode: httpStatus.CREATED,
+		success: true,
+		message: "Registration successful. Please verify your email with the OTP.",
+		data: null,
+	});
+});
 
-	const { accessToken, refreshToken, user, patient } = result;
+const verifyPatient = catchAsync(async (req: Request, res: Response) => {
+	const { accessToken, refreshToken, user, patient } =
+		await AuthService.verifyPatient(req.body);
 
 	res.cookie("accessToken", accessToken, {
 		httpOnly: true,
@@ -30,7 +35,7 @@ const registerPatient = catchAsync(async (req: Request, res: Response) => {
 	sendResponse(res, {
 		statusCode: httpStatus.CREATED,
 		success: true,
-		message: "Patient registered successfully",
+		message: "Patient verified successfully.",
 		data: {
 			accessToken,
 			refreshToken,
@@ -167,6 +172,7 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 
 export const AuthController = {
 	registerPatient,
+	verifyPatient,
 	loginUser,
 	getMe,
 	refreshToken,

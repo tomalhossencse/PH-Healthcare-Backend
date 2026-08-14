@@ -5,6 +5,7 @@ import {
 	ForgetPasswordZodSchema,
 	LoginZodSchema,
 	PataintRegZodSchema,
+	PataintVerifyZodSchema,
 	ResetPasswordZodSchema,
 } from "./auth.validation";
 import { Router } from "express";
@@ -17,6 +18,12 @@ router.post(
 	validationRequest(PataintRegZodSchema),
 	AuthController.registerPatient,
 );
+router.post(
+	"/verify-email",
+	validationRequest(PataintVerifyZodSchema),
+	AuthController.verifyPatient,
+);
+
 router.post(
 	"/login",
 	validationRequest(LoginZodSchema),

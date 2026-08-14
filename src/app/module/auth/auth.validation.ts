@@ -15,6 +15,11 @@ export const PataintRegZodSchema = z.object({
 		}),
 });
 
+export const PataintVerifyZodSchema = z.object({
+	email: z.email(),
+	otp: z.string().length(6, { message: "OTP must be exactly 6 characters" }),
+});
+
 export const LoginZodSchema = z.object({
 	email: z.email(),
 	password: z
@@ -35,6 +40,7 @@ export const ForgetPasswordZodSchema = z.object({
 
 export const ResetPasswordZodSchema = z.object({
 	email: z.email(),
+	otp: z.string().length(6, { message: "OTP must be exactly 6 characters" }),
 	newPassword: z
 		.string()
 		.min(6)
@@ -45,5 +51,4 @@ export const ResetPasswordZodSchema = z.object({
 		.regex(/[^A-Za-z0-9]/, {
 			message: "Contain at least one special character",
 		}),
-	otp: z.string().length(6, { message: "OTP must be exactly 6 characters" }),
 });
