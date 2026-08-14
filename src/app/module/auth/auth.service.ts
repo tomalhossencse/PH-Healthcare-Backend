@@ -20,6 +20,8 @@ import crypto from "crypto";
 import { radisClient } from "../../lib/radis";
 import { transporter } from "../../lib/nodemailer";
 import path from "path";
+import { cloudinary } from "../../lib/cloudinary";
+import { UploadApiResponse } from "cloudinary";
 
 const registerPatient = async (payload: IRegisterPatientPayload) => {
 	const { name, password, patient: patientData } = payload;
@@ -607,6 +609,42 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 	});
 };
 
+const uploadProfileImg = async (buffer: Buffer, userId: string) => {
+	const cloudinaryResult = await new Promise<UploadApiResponse>(
+		(reslove, reject) => {
+			cloudinary.uploader
+				.upload_stream({ resource_type: "auto" }, async (error, result) => {
+					if (error) {
+						console.log(error);
+						throw new Error(error.message);
+					}
+
+					if (!result) {
+						return reject(new Error("No result return from cloudinary"));
+					}
+
+					reslove(result);
+				})
+				.end(buffer);
+		},
+	);
+
+	const updatedUser = await prisma.user.update({
+		where: {
+			id: userId,
+		},
+		data: {
+			image: cloudinaryResult?.secure_url,
+			imagePublicId: cloudinaryResult?.public_id,
+		},
+		omit: {
+			password: true,
+		},
+	});
+
+	return updatedUser;
+};
+
 export const AuthService = {
 	registerPatient,
 	verifyPatient,
@@ -616,4 +654,5 @@ export const AuthService = {
 	googleLogin,
 	forgetPassword,
 	resetPassword,
+	uploadProfileImg,
 };

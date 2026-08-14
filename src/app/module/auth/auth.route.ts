@@ -10,6 +10,7 @@ import {
 } from "./auth.validation";
 import { Router } from "express";
 import { validationRequest } from "../../middleware/validateRequest";
+import { upload } from "../../lib/multer";
 
 const router = Router();
 
@@ -45,6 +46,13 @@ router.post(
 	"/reset-password",
 	validationRequest(ResetPasswordZodSchema),
 	AuthController.resetPassword,
+);
+
+router.patch(
+	"/profile-image",
+	auth(Role.ADMIN, Role.DOCTOR, Role.PATIENT, Role.SUPER_ADMIN),
+	upload.single("image"),
+	AuthController.uploadProfileImg,
 );
 
 export const AuthRoutes = router;
