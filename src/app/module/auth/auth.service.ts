@@ -610,6 +610,15 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 };
 
 const uploadProfileImg = async (buffer: Buffer, userId: string) => {
+	const currentUser = await prisma.user.findUnique({
+		where: {
+			id: userId,
+		},
+		select: {
+			imagePublicId: true,
+		},
+	});
+
 	const cloudinaryResult = await new Promise<UploadApiResponse>(
 		(reslove, reject) => {
 			cloudinary.uploader
@@ -641,6 +650,10 @@ const uploadProfileImg = async (buffer: Buffer, userId: string) => {
 			password: true,
 		},
 	});
+
+	if (currentUser?.imagePublicId) {
+		await cloudinary.uploader.destroy(currentUser.imagePublicId);
+	}
 
 	return updatedUser;
 };
