@@ -34,4 +34,9 @@ export default {
 	cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
 	cloudinary_cloud_api_key: process.env.CLOUDINARY_CLOUD_API_KEY!,
 	cloudinary_cloud_api_secret: process.env.CLOUDINARY_CLOUD_API_SECRET!,
+	bkash_base_url: process.env.BKASH_BASE_URL!,
+	bkash_username: process.env.BKASH_USERNAME!,
+	bkash_password: process.env.BKASH_PASSWORD!,
+	bkash_app_key: process.env.BKASH_APP_KEY!,
+	bkash_app_secret: process.env.BKASH_APP_SECRET!,
 };
