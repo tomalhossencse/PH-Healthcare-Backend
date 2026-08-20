@@ -12,12 +12,12 @@ export const getBkashIdToken = async () => {
 		const bkashRefreshToken = await radisClient.get(refreshTokenKey);
 		const bkashRefreshTokenTtl = await radisClient.ttl(refreshTokenKey);
 
-		console.log({
-			bkashIdToken,
-			bkashIdTokenTtl,
-			bkashRefreshToken,
-			bkashRefreshTokenTtl,
-		});
+		// console.log({
+		// 	bkashIdToken,
+		// 	bkashIdTokenTtl,
+		// 	bkashRefreshToken,
+		// 	bkashRefreshTokenTtl,
+		// });
 
 		if (
 			(bkashIdTokenTtl <= 600 || !bkashIdToken) &&

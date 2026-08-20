@@ -4,7 +4,6 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import type { IRequestUser } from "./auth.interface";
 import { AuthService } from "./auth.service";
-import { Result } from "pg";
 
 const registerPatient = catchAsync(async (req: Request, res: Response) => {
 	await AuthService.registerPatient(req.body);
