@@ -1,13 +1,13 @@
 model Appointment {
-    id String @id @default(uuid())
+  id String @id @default(uuid())
 
-    status  AppointmentStatus @default(PENDING)
-    payment Payment?
+  status  AppointmentStatus @default(PENDING)
+  payment Payment?
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    user      User?    @relation(fields: [userId], references: [id])
-    userId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    String?
 
-    @@map("appointments")
+  @@map("appointments")
 }

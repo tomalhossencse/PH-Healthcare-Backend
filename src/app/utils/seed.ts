@@ -129,6 +129,16 @@ export const seedTesterDoctor = async () => {
 				password: hashedPassword,
 				emailVerified: true,
 				needPasswordChange: false,
+				doctor: {
+					create: {
+						email,
+						experienceYears: 5,
+						name,
+						qualifications: "MBBS",
+						specialization: "Neurology",
+						licenseNumber: "BMDC00",
+					},
+				},
 			},
 		});
 
