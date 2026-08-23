@@ -18,7 +18,8 @@ model Doctor {
   reviewedAt         DateTime?
 
   resume          String?
-  additionalFiles String[]
+  resumePublicId  String?
+  additionalFiles Json?
 
   contactNumber String?
   address       String?

@@ -12,3 +12,15 @@ export const validationRequest = (zodSchema: ZodObject) => {
 		next();
 	});
 };
+
+export const validationRequestForApplyDoctor = (zodSchema: ZodObject) => {
+	return catchAsync((req: Request, res: Response, next: NextFunction) => {
+		const rawData = JSON.parse(req.body.data);
+		const payload = zodSchema.safeParse(rawData);
+		if (!payload.success) {
+			throw new Error(payload.error.issues[0].message);
+		}
+		req.body = payload.data;
+		next();
+	});
+};
