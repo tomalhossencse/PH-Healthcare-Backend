@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DoctorVerificationStatus } from "../../../generated/prisma/enums";
 
 export const applyAsDoctorZodSchema = z.object({
 	user: z.object({
@@ -23,4 +24,18 @@ export const applyAsDoctorZodSchema = z.object({
 export const DoctorVerifyZodSchema = z.object({
 	email: z.email(),
 	otp: z.string().length(6, { message: "OTP must be exactly 6 characters" }),
+});
+
+export const approveDoctorValidationSchema = z.object({
+	doctorId: z
+		.string({
+			error: "Doctor ID is required",
+		})
+		.min(1, "Doctor ID is required"),
+
+	verificationStatus: z.enum(DoctorVerificationStatus, {
+		error: "Verification status is required",
+	}),
+
+	rejectReason: z.string().optional(),
 });

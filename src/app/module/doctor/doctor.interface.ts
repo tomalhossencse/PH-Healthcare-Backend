@@ -1,3 +1,6 @@
+import { DoctorVerificationStatus } from "../../../generated/prisma/enums";
+import { DoctorWhereInput } from "../../../generated/prisma/models";
+
 // User fields required for initial doctor registration
 export interface IApplyAsDoctorUserPayload {
 	name: string;
@@ -25,4 +28,18 @@ export interface IApplyAsDoctorPayload {
 export interface IVerifyDoctorPayload {
 	otp: string;
 	email: string;
+}
+
+export interface IApproveDoctorPayload {
+	doctorId: string;
+	verificationStatus: DoctorVerificationStatus;
+	rejectReason?: string;
+}
+
+export interface IDoctorQuery extends DoctorWhereInput {
+	searchTerm?: string;
+	page?: string;
+	limit?: string;
+	sortBy?: string;
+	sortOrder?: string;
 }

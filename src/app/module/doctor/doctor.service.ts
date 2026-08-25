@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs";
 import config from "../../config";
 import {
 	IApplyAsDoctorPayload,
+	IApproveDoctorPayload,
+	IDoctorQuery,
 	IVerifyDoctorPayload,
 } from "./doctor.interface";
 import crypto from "crypto";
@@ -12,6 +14,10 @@ import { radisClient } from "../../lib/radis";
 import path from "path";
 import ejs from "ejs";
 import { transporter } from "../../lib/nodemailer";
+import { RequestUser } from "../../middleware/checkAuth";
+import { upload } from "../../lib/multer";
+import { IQuery } from "../../../interface";
+import { DoctorWhereInput } from "../../../generated/prisma/models";
 
 const applyAsDoctor = async (
 	payload: IApplyAsDoctorPayload,
@@ -193,7 +199,179 @@ const verifyDoctor = async (payload: IVerifyDoctorPayload) => {
 	return verifiedUser;
 };
 
+const approveDoctor = async (
+	payload: IApproveDoctorPayload,
+	reviewer: RequestUser,
+) => {
+	const { doctorId, verificationStatus, rejectReason } = payload;
+
+	const existingDoctor = await prisma.doctor.findUnique({
+		where: {
+			id: doctorId,
+		},
+		include: { user: true },
+	});
+
+	if (!existingDoctor) {
+		throw new Error("Doctor Application Not Found");
+	}
+
+	if (existingDoctor.isDeleted) {
+		throw new Error("Doctor application has been Deleted");
+	}
+
+	if (!existingDoctor.user.emailVerified) {
+		throw new Error("Doctor is not Verified yet");
+	}
+
+	if (existingDoctor.verificationStatus !== "PENDING") {
+		throw new Error(
+			`Doctor application is already been ${existingDoctor.verificationStatus.toLowerCase()}`,
+		);
+	}
+
+	if (verificationStatus === "REJECTED" && !rejectReason) {
+		throw new Error(
+			"Rejected Reason is Required when rejecting a doctor applicaton",
+		);
+	}
+
+	const updatedDoctor = await prisma.doctor.update({
+		where: {
+			id: doctorId,
+		},
+		data: {
+			verificationStatus,
+			rejectionReason: verificationStatus === "REJECTED" ? rejectReason : null,
+			reviewedBy: reviewer.userId,
+			reviewedAt: new Date(),
+		},
+	});
+
+	const isApproved = verificationStatus === "APPROVED";
+
+	const templatePath = path.join(
+		process.cwd(),
+		`src/app/templates/${isApproved ? "doctor-application-approved.ejs" : "doctor-application-reject.ejs"}`,
+	);
+
+	const templateData = {
+		name: updatedDoctor.name,
+		reason: updatedDoctor.rejectionReason,
+	};
+
+	const html = await ejs.renderFile(templatePath, templateData);
+
+	await transporter.sendMail({
+		from: config.email_sender,
+		to: updatedDoctor.email,
+		subject: isApproved
+			? "Doctor Verification Approved - PH Healthcare System"
+			: "Doctor Verification Rejected - PH Healthcare System",
+		html,
+	});
+
+	return updatedDoctor;
+};
+
+const getAllDoctors = async (query: IDoctorQuery) => {
+	const limit = query.limit ? Number(query.limit) : 5;
+	const page = query.page ? Number(query.page) : 1;
+	const skip = (page - 1) * limit;
+	const sortBy = query.sortBy ? query.sortBy : "createdAt";
+	const sortOrder = query.sortOrder ? query.sortOrder : "desc";
+
+	const andConditions: DoctorWhereInput[] = [];
+
+	// searching
+	if (query.searchTerm) {
+		andConditions.push({
+			// searching
+			OR: [
+				{
+					name: {
+						contains: query.searchTerm,
+						mode: "insensitive",
+					},
+				},
+				{
+					email: {
+						contains: query.searchTerm,
+						mode: "insensitive",
+					},
+				},
+				{
+					specialization: {
+						contains: query.searchTerm,
+						mode: "insensitive",
+					},
+				},
+				{
+					licenseNumber: {
+						contains: query.searchTerm,
+						mode: "insensitive",
+					},
+				},
+			],
+		});
+	}
+
+	// filtering
+	if (query.specialization) {
+		andConditions.push({
+			specialization: {
+				equals: query.specialization as string,
+				mode: "insensitive",
+			},
+		});
+	}
+
+	if (query.licenseNumber) {
+		andConditions.push({
+			licenseNumber: {
+				equals: query.licenseNumber as string,
+				mode: "insensitive",
+			},
+		});
+	}
+
+	if (query.verificationStatus) {
+		andConditions.push({
+			verificationStatus: query.verificationStatus,
+		});
+	}
+
+	andConditions.push({
+		isDeleted: false,
+	});
+
+	const doctors = await prisma.doctor.findMany({
+		where: {
+			AND: andConditions,
+		},
+		// pagination
+		take: limit,
+		skip: skip,
+		//sorting
+		orderBy: {
+			[sortBy]: sortOrder,
+		},
+
+		include: {
+			user: {
+				omit: {
+					password: true,
+				},
+			},
+		},
+	});
+
+	return doctors;
+};
+
 export const DoctorService = {
 	applyAsDoctor,
 	verifyDoctor,
+	approveDoctor,
+	getAllDoctors,
 };

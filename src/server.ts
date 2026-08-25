@@ -20,7 +20,7 @@ const main = async () => {
 		console.log("❤️  Radis connected successfully.");
 
 		await transporter.verify();
-		console.log("Nodemailer connected successfully");
+		console.log("❤️ Nodemailer connected successfully");
 
 		// await seedSuperAdmin();
 		// await seedTesterAdmin();
