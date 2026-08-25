@@ -19,3 +19,8 @@ export const applyAsDoctorZodSchema = z.object({
 		address: z.string().optional(),
 	}),
 });
+
+export const DoctorVerifyZodSchema = z.object({
+	email: z.email(),
+	otp: z.string().length(6, { message: "OTP must be exactly 6 characters" }),
+});

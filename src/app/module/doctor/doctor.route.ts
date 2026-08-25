@@ -1,8 +1,14 @@
 import { Router } from "express";
 import { DoctorController } from "./doctor.controller";
 import { upload } from "../../lib/multer";
-import { validationRequestForApplyDoctor } from "../../middleware/validateRequest";
-import { applyAsDoctorZodSchema } from "./doctor.validation";
+import {
+	validationRequest,
+	validationRequestForApplyDoctor,
+} from "../../middleware/validateRequest";
+import {
+	applyAsDoctorZodSchema,
+	DoctorVerifyZodSchema,
+} from "./doctor.validation";
 
 const router = Router();
 
@@ -14,6 +20,12 @@ router.post(
 	]),
 	validationRequestForApplyDoctor(applyAsDoctorZodSchema),
 	DoctorController.applyAsDoctor,
+);
+
+router.post(
+	"/verify-email",
+	validationRequest(DoctorVerifyZodSchema),
+	DoctorController.verifyDoctor,
 );
 
 export const DoctorRoutes = router;
