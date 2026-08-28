@@ -366,7 +366,21 @@ const getAllDoctors = async (query: IDoctorQuery) => {
 		},
 	});
 
-	return doctors;
+	const totalDoctorCount = await prisma.doctor.count({
+		where: {
+			AND: andConditions,
+		},
+	});
+
+	return {
+		data: doctors,
+		meta: {
+			limit,
+			page,
+			total: totalDoctorCount,
+			totalPages: Math.ceil(totalDoctorCount / limit),
+		},
+	};
 };
 
 export const DoctorService = {

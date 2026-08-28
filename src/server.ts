@@ -1,5 +1,6 @@
 import app from "./app";
 import config from "./app/config";
+import { deleteUnverifiedDoctors } from "./app/lib/cron";
 import { transporter } from "./app/lib/nodemailer";
 import { prisma } from "./app/lib/prisma";
 import { radisClient } from "./app/lib/radis";
@@ -24,7 +25,10 @@ const main = async () => {
 
 		// await seedSuperAdmin();
 		// await seedTesterAdmin();
-		await seedTesterDoctor();
+		// await seedTesterDoctor();
+
+		await deleteUnverifiedDoctors();
+
 		app.listen(PORT, () => {
 			console.log(`🌐 Server is running on port ${PORT}`);
 		});
