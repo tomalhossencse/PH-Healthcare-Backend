@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="x-apple-disable-message-reformatting" />
+
+        <title>Your Appointment Invoice - PH Healthcare System</title>
+
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                background-color: #f1f5f9;
+                font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            table {
+                border-spacing: 0;
+                border-collapse: collapse;
+            }
+
+            @media only screen and (max-width: 640px) {
+                .email-wrapper {
+                    padding: 20px 10px !important;
+                }
+
+                .email-container {
+                    width: 100% !important;
+                    border-radius: 16px !important;
+                }
+
+                .header {
+                    padding: 32px 20px !important;
+                }
+
+                .content {
+                    padding: 30px 20px !important;
+                }
+
+                .header-title {
+                    font-size: 24px !important;
+                }
+
+                .content-title {
+                    font-size: 22px !important;
+                }
+
+                .meta-column {
+                    display: block !important;
+                    width: 100% !important;
+                    padding-bottom: 12px !important;
+                }
+            }
+
+            @media only screen and (max-width: 400px) {
+                .email-wrapper {
+                    padding: 10px 5px !important;
+                }
+
+                .header {
+                    padding: 28px 16px !important;
+                }
+
+                .content {
+                    padding: 25px 16px !important;
+                }
+
+                .header-title {
+                    font-size: 21px !important;
+                }
+
+                .content-title {
+                    font-size: 20px !important;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="width: 100%; background-color: #f1f5f9"
+        >
+            <tr>
+                <td
+                    class="email-wrapper"
+                    align="center"
+                    style="padding: 40px 15px"
+                >
+                    <table
+                        role="presentation"
+                        class="email-container"
+                        width="620"
+                        cellpadding="0"
+                        cellspacing="0"
+                        style="
+                            width: 100%;
+                            max-width: 620px;
+                            background-color: #ffffff;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 20px;
+                            overflow: hidden;
+                            box-shadow: 0 12px 35px rgba(15, 23, 42, 0.12);
+                        "
+                    >
+                        <!-- Header -->
+                        <tr>
+                            <td
+                                class="header"
+                                align="center"
+                                style="
+                                    padding: 42px 30px 38px;
+                                    background-color: #059669;
+                                    background-image: linear-gradient(
+                                        135deg,
+                                        #047857 0%,
+                                        #059669 50%,
+                                        #0d9488 100%
+                                    );
+                                    color: #ffffff;
+                                "
+                            >
+                                <div
+                                    style="
+                                        width: 64px;
+                                        height: 64px;
+                                        line-height: 64px;
+                                        margin: 0 auto 18px;
+                                        background-color: rgba(
+                                            255,
+                                            255,
+                                            255,
+                                            0.18
+                                        );
+                                        border: 2px solid
+                                            rgba(255, 255, 255, 0.4);
+                                        border-radius: 50%;
+                                        font-size: 28px;
+                                        font-weight: bold;
+                                    "
+                                >
+                                    📄
+                                </div>
+
+                                <h1
+                                    class="header-title"
+                                    style="
+                                        margin: 0;
+                                        font-size: 28px;
+                                        line-height: 1.3;
+                                        color: #ffffff;
+                                    "
+                                >
+                                    Your Appointment Invoice
+                                </h1>
+
+                                <p
+                                    style="
+                                        margin: 10px 0 0;
+                                        font-size: 15px;
+                                        color: rgba(255, 255, 255, 0.9);
+                                    "
+                                >
+                                    Thank you for choosing PH Healthcare System
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- Content -->
+                        <tr>
+                            <td
+                                class="content"
+                                style="padding: 42px; color: #334155"
+                            >
+                                <h2
+                                    class="content-title"
+                                    style="
+                                        margin: 0 0 18px;
+                                        font-size: 24px;
+                                        color: #0f172a;
+                                    "
+                                >
+                                    Invoice #<%= invoiceNumber %>
+                                </h2>
+
+                                <p
+                                    style="
+                                        font-size: 16px;
+                                        line-height: 1.8;
+                                        color: #475569;
+                                        margin: 0 0 24px;
+                                    "
+                                >
+                                    Hello <%= name %>, here is the invoice for
+                                    your recent appointment with PH Healthcare
+                                    System.
+                                </p>
+
+                                <!-- Meta Info Card -->
+                                <table
+                                    role="presentation"
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    style="
+                                        background-color: #f8fafc;
+                                        border: 1px solid #e2e8f0;
+                                        border-radius: 14px;
+                                        padding: 16px 20px;
+                                        margin-bottom: 28px;
+                                    "
+                                >
+                                    <tr>
+                                        <td
+                                            class="meta-column"
+                                            style="
+                                                font-size: 14px;
+                                                color: #475569;
+                                            "
+                                        >
+                                            <strong>Invoice Date:</strong> <%=
+                                            invoiceDate %>
+                                        </td>
+                                        <td
+                                            class="meta-column"
+                                            align="right"
+                                            style="
+                                                font-size: 14px;
+                                                color: #475569;
+                                            "
+                                        >
+                                            <strong>Status:</strong>
+                                            <span
+                                                style="
+                                                    color: #059669;
+                                                    font-weight: bold;
+                                                "
+                                                >PAID</span
+                                            >
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- Fixed Service Details Table -->
+                                <table
+                                    role="presentation"
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    style="
+                                        width: 100%;
+                                        margin-bottom: 28px;
+                                        border-collapse: collapse;
+                                    "
+                                >
+                                    <thead>
+                                        <tr
+                                            style="
+                                                border-bottom: 2px solid #e2e8f0;
+                                            "
+                                        >
+                                            <th
+                                                align="left"
+                                                style="
+                                                    padding: 10px 0;
+                                                    font-size: 14px;
+                                                    color: #0f172a;
+                                                "
+                                            >
+                                                Service
+                                            </th>
+                                            <th
+                                                align="right"
+                                                style="
+                                                    padding: 10px 0;
+                                                    font-size: 14px;
+                                                    color: #0f172a;
+                                                "
+                                            >
+                                                Amount
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr
+                                            style="
+                                                border-bottom: 1px solid #f1f5f9;
+                                            "
+                                        >
+                                            <td
+                                                style="
+                                                    padding: 12px 0;
+                                                    font-size: 14px;
+                                                    color: #475569;
+                                                "
+                                            >
+                                                Medical Consultation Fee
+                                            </td>
+                                            <td
+                                                align="right"
+                                                style="
+                                                    padding: 12px 0;
+                                                    font-size: 14px;
+                                                    color: #475569;
+                                                "
+                                            >
+                                                $<%= amount %>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <!-- Total Card -->
+                                <table
+                                    role="presentation"
+                                    width="100%"
+                                    cellpadding="0"
+                                    cellspacing="0"
+                                    style="
+                                        margin: 20px 0 28px;
+                                        background-color: #ecfdf5;
+                                        border: 1px solid #a7f3d0;
+                                        border-radius: 16px;
+                                    "
+                                >
+                                    <tr>
+                                        <td
+                                            align="center"
+                                            style="padding: 20px"
+                                        >
+                                            <p
+                                                style="
+                                                    margin: 0;
+                                                    font-size: 14px;
+                                                    color: #065f46;
+                                                "
+                                            >
+                                                Total Amount Paid
+                                            </p>
+                                            <h3
+                                                style="
+                                                    margin: 6px 0 0;
+                                                    font-size: 26px;
+                                                    color: #047857;
+                                                "
+                                            >
+                                                $<%= amount %>
+                                            </h3>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <p
+                                    style="
+                                        margin-top: 30px;
+                                        padding-top: 24px;
+                                        border-top: 1px solid #e2e8f0;
+                                        font-size: 15px;
+                                        line-height: 1.7;
+                                        color: #475569;
+                                    "
+                                >
+                                    If you have any questions regarding this
+                                    invoice, please contact our billing
+                                    department.
+                                    <br /><br />
+
+                                    Best regards,<br />
+                                    <strong
+                                        style="color: #0f172a; font-size: 16px"
+                                    >
+                                        PH Healthcare System Team
+                                    </strong>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td
+                                align="center"
+                                style="
+                                    padding: 26px 20px;
+                                    background-color: #f8fafc;
+                                    border-top: 1px solid #e2e8f0;
+                                "
+                            >
+                                <p
+                                    style="
+                                        margin: 0;
+                                        font-size: 13px;
+                                        color: #64748b;
+                                    "
+                                >
+                                    © <%= new Date().getFullYear() %> PH
+                                    Healthcare System. All rights reserved.
+                                </p>
+
+                                <p
+                                    style="
+                                        margin: 8px 0 0;
+                                        font-size: 12px;
+                                        color: #94a3b8;
+                                    "
+                                >
+                                    This is an automated email. Please do not
+                                    reply directly to this message.
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+</html>

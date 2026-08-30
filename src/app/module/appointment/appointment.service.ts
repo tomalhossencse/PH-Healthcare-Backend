@@ -5,8 +5,10 @@ import { RequestUser } from "../../middleware/checkAuth";
 import httpStatus from "http-status";
 import { AppError } from "../../utils/AppError";
 import { IBookAppointment } from "./appointment.interface";
-import { isBefore, isSameDay } from "date-fns";
-
+import { addMinutes, isBefore, isSameDay } from "date-fns";
+import ejs from "ejs";
+import { transporter } from "../../lib/nodemailer";
+import path from "path";
 const bookAppointment = async (
 	payload: IBookAppointment,
 	user: RequestUser,
@@ -177,6 +179,13 @@ const payAppointment = async (payload: any, user: RequestUser) => {
 		where: {
 			id: appointmentId,
 		},
+		include: {
+			schedule: {
+				include: {
+					doctor: true,
+				},
+			},
+		},
 	});
 
 	if (!existingAppointment) {
@@ -197,6 +206,14 @@ const payAppointment = async (payload: any, user: RequestUser) => {
 	// 	);
 	// }
 	// bkash bussiness logic
+
+	if (!existingAppointment.schedule.doctor.consultationFee) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			"Doctor not set a consultation fee yet",
+		);
+	}
+	const amount = existingAppointment.schedule.doctor.consultationFee.toString();
 	const bkashIdToken = await getBkashIdToken();
 
 	if (!bkashIdToken) {
@@ -220,7 +237,7 @@ const payAppointment = async (payload: any, user: RequestUser) => {
 				// payerReference: user.email,
 				callbackURL: `${config.bkash_callback_url}/appointment/book-appointment/payment/callback`,
 				merchantAssociationInfo: "MI05MID54RF09123456One",
-				amount: "999",
+				amount,
 				currency: "BDT",
 				intent: "sale",
 				// merchantInvoiceNumber: "Inv02",
@@ -285,12 +302,50 @@ const bookAppointmentCallback = async (query: Record<string, any>) => {
 		const bkashExecutedPaymentResult = await bkashExecutedPaymentRes.json();
 
 		if (status === "success") {
+			const appointment = await prisma.appointment.findUnique({
+				where: {
+					id: bkashExecutedPaymentResult.merchantInvoiceNumber,
+				},
+				include: {
+					schedule: true,
+					patient: true,
+					doctor: true,
+				},
+			});
+
+			if (!appointment) {
+				throw new AppError(httpStatus.NOT_FOUND, "Appointment not found");
+			}
+
+			const newAvailableSlots = appointment.schedule.availableSlots - 1;
+
+			const alreadyBookedSlots =
+				appointment.schedule.totalSlots - appointment.schedule.availableSlots;
+
+			const serialNumber = alreadyBookedSlots + 1;
+
+			const joiningTime = addMinutes(
+				appointment.schedule.startDateTime,
+				(serialNumber - 1) * 20,
+			);
+
 			await tx.appointment.update({
 				where: {
 					id: bkashExecutedPaymentResult.merchantInvoiceNumber,
 				},
 				data: {
 					status: "CONFIRMED",
+					serialNumber,
+					joiningTime,
+				},
+			});
+
+			await tx.schedule.update({
+				where: {
+					id: appointment.schedule.id,
+				},
+				data: {
+					availableSlots: newAvailableSlots,
 				},
 			});
 
@@ -305,6 +360,27 @@ const bookAppointmentCallback = async (query: Record<string, any>) => {
 					paidAt: bkashExecutedPaymentResult.paymentExecuteTime,
 					gatwayRespone: bkashExecutedPaymentResult,
 				},
+			});
+
+			const templatePath = path.join(
+				process.cwd(),
+				`src/app/templates/patient-payment-invoice.ejs`,
+			);
+
+			const templateData = {
+				name: appointment.patient.name,
+				invoiceDate: bkashExecutedPaymentResult.paymentExecuteTime,
+				invoiceNumber: bkashExecutedPaymentResult.merchantInvoiceNumber,
+				amount: bkashExecutedPaymentResult.amount,
+			};
+
+			const html = await ejs.renderFile(templatePath, templateData);
+
+			await transporter.sendMail({
+				from: config.email_sender,
+				to: appointment.patient.email,
+				subject: "Your Appointment Invoice - PH Healthcare System",
+				html,
 			});
 
 			return {
