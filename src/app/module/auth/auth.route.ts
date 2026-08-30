@@ -9,25 +9,25 @@ import {
 	ResetPasswordZodSchema,
 } from "./auth.validation";
 import { Router } from "express";
-import { validationRequest } from "../../middleware/validateRequest";
+import { validateRequest } from "../../middleware/validateRequest";
 import { upload } from "../../lib/multer";
 
 const router = Router();
 
 router.post(
 	"/register",
-	validationRequest(PataintRegZodSchema),
+	validateRequest(PataintRegZodSchema),
 	AuthController.registerPatient,
 );
 router.post(
 	"/verify-email",
-	validationRequest(PataintVerifyZodSchema),
+	validateRequest(PataintVerifyZodSchema),
 	AuthController.verifyPatient,
 );
 
 router.post(
 	"/login",
-	validationRequest(LoginZodSchema),
+	validateRequest(LoginZodSchema),
 	AuthController.loginUser,
 );
 router.get(
@@ -39,12 +39,12 @@ router.post("/refresh-token", AuthController.refreshToken);
 router.post("/google", AuthController.googleLogin);
 router.post(
 	"/forget-password",
-	validationRequest(ForgetPasswordZodSchema),
+	validateRequest(ForgetPasswordZodSchema),
 	AuthController.forgetPassword,
 );
 router.post(
 	"/reset-password",
-	validationRequest(ResetPasswordZodSchema),
+	validateRequest(ResetPasswordZodSchema),
 	AuthController.resetPassword,
 );
 

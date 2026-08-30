@@ -1,7 +1,27 @@
 model Appointment {
   id String @id @default(uuid())
 
-  status  AppointmentStatus @default(PENDING)
+  status AppointmentStatus @default(PENDING)
+
+  joiningTime  DateTime?
+  serialNumber Int?
+
+  recordUrl      String?
+  recordPublicId String?
+
+  prescriptionUrl      String?
+  prescriptionPublicId String?
+
+  //relations
+  doctorId String
+  doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  scheduleId String
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
   payment Payment?
 
   createdAt DateTime @default(now())
@@ -9,5 +29,7 @@ model Appointment {
   user      User?    @relation(fields: [userId], references: [id])
   userId    String?
 
+  @@unique([patientId, doctorId, scheduleId], name: "unique_appointment")
+  @@unique([scheduleId, serialNumber, joiningTime], name: "unique_appointment_serial_numbe")
   @@map("appointments")
 }

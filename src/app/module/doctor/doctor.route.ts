@@ -2,8 +2,8 @@ import { Router } from "express";
 import { DoctorController } from "./doctor.controller";
 import { upload } from "../../lib/multer";
 import {
-	validationRequest,
-	validationRequestForApplyDoctor,
+	validateRequest,
+	validateRequestForApplyDoctor,
 } from "../../middleware/validateRequest";
 import {
 	applyAsDoctorZodSchema,
@@ -20,19 +20,19 @@ router.post(
 		{ name: "resume", maxCount: 1 },
 		{ name: "additionalFiles", maxCount: 5 },
 	]),
-	validationRequestForApplyDoctor(applyAsDoctorZodSchema),
+	validateRequestForApplyDoctor(applyAsDoctorZodSchema),
 	DoctorController.applyAsDoctor,
 );
 
 router.post(
 	"/verify-email",
-	validationRequest(DoctorVerifyZodSchema),
+	validateRequest(DoctorVerifyZodSchema),
 	DoctorController.verifyDoctor,
 );
 
 router.patch(
 	"/approve-doctor",
-	validationRequest(approveDoctorValidationSchema),
+	validateRequest(approveDoctorValidationSchema),
 	auth("ADMIN", "SUPER_ADMIN"),
 	DoctorController.approveDoctor,
 );

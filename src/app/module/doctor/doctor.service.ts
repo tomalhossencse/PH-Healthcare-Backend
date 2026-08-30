@@ -19,6 +19,9 @@ import { upload } from "../../lib/multer";
 import { IQuery } from "../../../interface";
 import { DoctorWhereInput } from "../../../generated/prisma/models";
 
+import { AppError } from "../../utils/AppError";
+import httpStatus from "http-status";
+
 const applyAsDoctor = async (
 	payload: IApplyAsDoctorPayload,
 	resume: Express.Multer.File | null,
@@ -31,7 +34,10 @@ const applyAsDoctor = async (
 	});
 
 	if (isUserExist) {
-		throw new Error("User already exists with this email");
+		throw new AppError(
+			httpStatus.CONFLICT,
+			"User already exists with this email",
+		);
 	}
 
 	const resumeUploadResult = await new Promise<UploadApiResponse>(
@@ -40,11 +46,16 @@ const applyAsDoctor = async (
 				.upload_stream({ resource_type: "auto" }, async (error, result) => {
 					if (error) {
 						console.log(error);
-						throw new Error(error.message);
+						throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, error.message);
 					}
 
 					if (!result) {
-						return reject(new Error("No result return from cloudinary"));
+						return reject(
+							new AppError(
+								httpStatus.INTERNAL_SERVER_ERROR,
+								"No result return from cloudinary",
+							),
+						);
 					}
 
 					reslove(result);
@@ -60,11 +71,16 @@ const applyAsDoctor = async (
 					.upload_stream({ resource_type: "auto" }, async (error, result) => {
 						if (error) {
 							console.log(error);
-							throw new Error(error.message);
+							throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, error.message);
 						}
 
 						if (!result) {
-							return reject(new Error("No result return from cloudinary"));
+							return reject(
+								new AppError(
+									httpStatus.INTERNAL_SERVER_ERROR,
+									"No result return from cloudinary",
+								),
+							);
 						}
 
 						reslove(result);
@@ -152,23 +168,29 @@ const verifyDoctor = async (payload: IVerifyDoctorPayload) => {
 	});
 
 	if (!isUserExist) {
-		throw new Error("Doctor Application not found. Please apply again");
+		throw new AppError(
+			httpStatus.NOT_FOUND,
+			"Doctor Application not found. Please apply again",
+		);
 	}
 
 	if (isUserExist?.emailVerified) {
-		throw new Error("User with this email already exists");
+		throw new AppError(
+			httpStatus.CONFLICT,
+			"User with this email already exists",
+		);
 	}
 
 	if (isUserExist?.status === "BLOCKED") {
-		throw new Error("User is blocked");
+		throw new AppError(httpStatus.FORBIDDEN, "User is blocked");
 	}
 
 	if (isUserExist?.isDeleted || isUserExist?.status === "DELETED") {
-		throw new Error("User is deleted");
+		throw new AppError(httpStatus.NOT_FOUND, "User is deleted");
 	}
 
 	if (isUserExist?.emailVerified) {
-		throw new Error("Your Email already verified");
+		throw new AppError(httpStatus.CONFLICT, "Your Email already verified");
 	}
 
 	const otpKey = `doctor-application-otp:${email}`;
@@ -176,11 +198,11 @@ const verifyDoctor = async (payload: IVerifyDoctorPayload) => {
 	const redisOtp = await radisClient.get(otpKey);
 
 	if (!redisOtp) {
-		throw new Error("Invalid OTP");
+		throw new AppError(httpStatus.BAD_REQUEST, "Invalid OTP");
 	}
 
 	if (redisOtp !== otp) {
-		throw new Error("OTP does not match");
+		throw new AppError(httpStatus.BAD_REQUEST, "OTP does not match");
 	}
 
 	await radisClient.del(otpKey);
@@ -213,25 +235,27 @@ const approveDoctor = async (
 	});
 
 	if (!existingDoctor) {
-		throw new Error("Doctor Application Not Found");
+		throw new AppError(httpStatus.NOT_FOUND, "Doctor Application Not Found");
 	}
 
 	if (existingDoctor.isDeleted) {
-		throw new Error("Doctor application has been Deleted");
+		throw new AppError(httpStatus.NOT_FOUND, "Doctor application has been Deleted");
 	}
 
 	if (!existingDoctor.user.emailVerified) {
-		throw new Error("Doctor is not Verified yet");
+		throw new AppError(httpStatus.BAD_REQUEST, "Doctor is not Verified yet");
 	}
 
 	if (existingDoctor.verificationStatus !== "PENDING") {
-		throw new Error(
+		throw new AppError(
+			httpStatus.CONFLICT,
 			`Doctor application is already been ${existingDoctor.verificationStatus.toLowerCase()}`,
 		);
 	}
 
 	if (verificationStatus === "REJECTED" && !rejectReason) {
-		throw new Error(
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
 			"Rejected Reason is Required when rejecting a doctor applicaton",
 		);
 	}

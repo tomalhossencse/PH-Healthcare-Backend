@@ -1,5 +1,7 @@
 import config from "../config";
 import { radisClient } from "./radis";
+import httpStatus from "http-status";
+import { AppError } from "../utils/AppError";
 
 export const getBkashIdToken = async () => {
 	try {
@@ -43,7 +45,10 @@ export const getBkashIdToken = async () => {
 			);
 
 			if (!refreshTokenRes.ok) {
-				throw new Error("Bkash Refresh Token failed");
+				throw new AppError(
+					httpStatus.BAD_GATEWAY,
+					"Bkash Refresh Token failed",
+				);
 			}
 
 			const refreshTokenResult = await refreshTokenRes.json();
@@ -82,7 +87,7 @@ export const getBkashIdToken = async () => {
 		);
 
 		if (!res.ok) {
-			throw new Error("Bkash access Token grant failed");
+			throw new AppError(httpStatus.BAD_GATEWAY, "Bkash access Token grant failed");
 		}
 
 		const result = await res.json();
@@ -104,6 +109,6 @@ export const getBkashIdToken = async () => {
 
 		return bkashIdToken;
 	} catch (error: any) {
-		throw new Error(error.message);
+		throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, error.message);
 	}
 };
