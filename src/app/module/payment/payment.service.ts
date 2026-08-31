@@ -23,8 +23,12 @@ const getMyPayments = async (query: IQuery, user: RequestUser) => {
 		throw new AppError(httpStatus.NOT_FOUND, "Patient Profile not found");
 	}
 
-	const payment = await prisma.payment.findMany({
-		where: { appointment: { patientId: patient.id } },
+	const andConditions: PaymentWhereInput[] = [
+		{ appointment: { patientId: patient.id } },
+	];
+
+	const payments = await prisma.payment.findMany({
+		where: { AND: andConditions },
 		take: limit,
 		skip,
 		orderBy: {
@@ -42,8 +46,23 @@ const getMyPayments = async (query: IQuery, user: RequestUser) => {
 		},
 	});
 
-	return payment;
+	const totalPaymentCount = await prisma.payment.count({
+		where: {
+			AND: andConditions,
+		},
+	});
+
+	return {
+		data: payments,
+		meta: {
+			limit,
+			page,
+			total: totalPaymentCount,
+			totalPages: Math.ceil(totalPaymentCount / limit),
+		},
+	};
 };
+
 const getAllPayments = async (query: IPaymentQuery) => {
 	const limit = query.limit ? Number(query.limit) : 5;
 	const page = query.page ? Number(query.page) : 1;
@@ -62,7 +81,7 @@ const getAllPayments = async (query: IPaymentQuery) => {
 		});
 	}
 
-	const payment = await prisma.payment.findMany({
+	const payments = await prisma.payment.findMany({
 		where: {
 			AND: andConditions,
 		},
@@ -83,9 +102,24 @@ const getAllPayments = async (query: IPaymentQuery) => {
 		},
 	});
 
-	return payment;
+	const totalPaymentCount = await prisma.payment.count({
+		where: {
+			AND: andConditions,
+		},
+	});
+
+	return {
+		data: payments,
+		meta: {
+			limit,
+			page,
+			total: totalPaymentCount,
+			totalPages: Math.ceil(totalPaymentCount / limit),
+		},
+	};
 };
-const getPaymentDetails = async (paymentId: string, user: RequestUser) => {
+
+const getSinglePayment = async (paymentId: string, user: RequestUser) => {
 	const payment = await prisma.payment.findUnique({
 		where: { id: paymentId },
 		include: {
@@ -119,8 +153,8 @@ const getPaymentDetails = async (paymentId: string, user: RequestUser) => {
 	return payment;
 };
 
-export const paymentServices = {
+export const PaymentService = {
 	getAllPayments,
 	getMyPayments,
-	getPaymentDetails,
+	getSinglePayment,
 };

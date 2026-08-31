@@ -178,7 +178,51 @@ const createPrescription = async (
 	return updatedAppointment;
 };
 
-const getSinglePrescription = async () => {};
+const getSinglePrescription = async (
+	appointmentId: string,
+	user: RequestUser,
+) => {
+	const appointment = await prisma.appointment.findUnique({
+		where: { id: appointmentId },
+		include: {
+			patient: { select: { id: true, name: true, userId: true } },
+			doctor: { select: { id: true, name: true, userId: true } },
+		},
+	});
+
+	if (!appointment) {
+		throw new AppError(httpStatus.NOT_FOUND, "Appointment Not Found");
+	}
+
+	if (user.role === "PATIENT") {
+		if (appointment.patient.userId !== user.userId) {
+			throw new AppError(
+				httpStatus.FORBIDDEN,
+				"You Are Not Allowed To View This Appointment",
+			);
+		}
+	}
+	if (user.role === "DOCTOR") {
+		if (appointment.doctor.userId !== user.userId) {
+			throw new AppError(
+				httpStatus.FORBIDDEN,
+				"You Are Not Allowed To View This Appointment",
+			);
+		}
+	}
+
+	if (!appointment.prescriptionUrl) {
+		throw new AppError(
+			httpStatus.NOT_FOUND,
+			"No Prescription Has Been Written Yet",
+		);
+	}
+
+	return {
+		appointment,
+		prescription: appointment.prescriptionUrl,
+	};
+};
 
 export const PrescriptionServices = {
 	createPrescription,
