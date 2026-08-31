@@ -43,3 +43,10 @@ export interface IDoctorQuery extends DoctorWhereInput {
 	sortBy?: string;
 	sortOrder?: string;
 }
+
+export interface IUpdateDoctorProfilePayload {
+	address?: string;
+	bio?: string;
+	consultationFee?: number;
+	contactNumber?: string;
+}

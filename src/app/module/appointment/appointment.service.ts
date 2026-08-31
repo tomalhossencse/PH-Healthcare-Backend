@@ -741,7 +741,7 @@ const getMyAppointments = async (
 	if (query.specialization) {
 		andConditions.push({
 			doctor: {
-				specialization: query.specialization,
+				specialization: { equals: query.specialization, mode: "insensitive" },
 			},
 		});
 	}
