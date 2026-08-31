@@ -145,11 +145,24 @@ const createPrescription = async (
 
 	const templatePath = path.join(
 		process.cwd(),
-		`src/app/templates/patient-payment-invoice.ejs`,
+		`src/app/templates/prescription.ejs`,
 	);
 
 	const templateData = {
-		name: appointment.patient.name,
+		appointment: {
+			patient: {
+				name: appointment.patient.name,
+				email: appointment.patient.email,
+			},
+		},
+		doctor: {
+			name: doctor.name,
+			qualification: doctor.specialization,
+		},
+		payload: {
+			findings: payload.findings,
+			medicines: payload.medicines,
+		},
 	};
 
 	const html = await ejs.renderFile(templatePath, templateData);
@@ -157,10 +170,12 @@ const createPrescription = async (
 	await transporter.sendMail({
 		from: config.email_sender,
 		to: appointment.patient.email,
-		subject: "Your Appointment Invoice - PH Healthcare System",
+		subject: "Your Medical Prescription - PH Healthcare System",
 		html,
-		attachments: [{ filename: "invoice.pdf", content: pdfBuffer }],
+		attachments: [{ filename: "prescription.pdf", content: pdfBuffer }],
 	});
+
+	return updatedAppointment;
 };
 
 const getSinglePrescription = async () => {};
