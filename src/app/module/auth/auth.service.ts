@@ -236,6 +236,9 @@ const loginUser = async (payload: ILoginUserPayload) => {
 	if (user.isDeleted || user.status === UserStatus.DELETED) {
 		throw new AppError(httpStatus.NOT_FOUND, "User is deleted");
 	}
+	if (user.needPasswordChange) {
+		throw new AppError(httpStatus.BAD_REQUEST, "Password change is required");
+	}
 
 	if (user.password === null && user.googlId !== null) {
 		throw new AppError(
@@ -243,7 +246,6 @@ const loginUser = async (payload: ILoginUserPayload) => {
 			"User already registered with google account.Please try to login in with google",
 		);
 	}
-
 	const isPasswordMatched = await bcrypt.compare(
 		password,
 		user.password as string,
@@ -604,6 +606,7 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 		},
 		data: {
 			password: hasedNewPassword,
+			needPasswordChange: false,
 		},
 	});
 

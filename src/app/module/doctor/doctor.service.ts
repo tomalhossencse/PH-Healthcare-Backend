@@ -101,10 +101,10 @@ const applyAsDoctor = async (
 
 	const doctorApplication = await prisma.user.create({
 		data: {
-			password: hashPassword,
+			...payload.user,
 			role: "DOCTOR",
 			needPasswordChange: true,
-			...payload.user,
+			password: hashPassword,
 
 			doctor: {
 				create: {
@@ -275,6 +275,9 @@ const approveDoctor = async (
 			reviewedBy: reviewer.userId,
 			reviewedAt: new Date(),
 		},
+		include: {
+			user: true,
+		},
 	});
 
 	const isApproved = verificationStatus === "APPROVED";
@@ -286,6 +289,8 @@ const approveDoctor = async (
 
 	const templateData = {
 		name: updatedDoctor.name,
+		email: updatedDoctor.email,
+		password: updatedDoctor.user.password,
 		reason: updatedDoctor.rejectionReason,
 	};
 

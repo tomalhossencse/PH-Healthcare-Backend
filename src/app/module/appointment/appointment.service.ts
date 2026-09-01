@@ -500,120 +500,123 @@ const bookAppointmentCallback = async (query: Record<string, any>) => {
 };
 
 const cancelAppointment = async (payload: IPayAppointment) => {
-	const transactionResult = await prisma.$transaction(async (tx) => {
-		const appointmentId = payload.appointmentId;
+	const transactionResult = await prisma.$transaction(
+		async (tx) => {
+			const appointmentId = payload.appointmentId;
 
-		const existingAppointment = await tx.appointment.findUnique({
-			where: {
-				id: appointmentId,
-			},
-			include: {
-				payment: true,
-				schedule: true,
-			},
-		});
+			const existingAppointment = await tx.appointment.findUnique({
+				where: {
+					id: appointmentId,
+				},
+				include: {
+					payment: true,
+					schedule: true,
+				},
+			});
 
-		console.log(existingAppointment);
+			console.log(existingAppointment);
 
-		if (!existingAppointment) {
-			throw new AppError(httpStatus.NOT_FOUND, "Appointment is not exists");
-		}
+			if (!existingAppointment) {
+				throw new AppError(httpStatus.NOT_FOUND, "Appointment is not exists");
+			}
 
-		if (
-			existingAppointment.status === "ONGOING" ||
-			existingAppointment.status === "COMPLETED"
-		) {
-			throw new AppError(
-				httpStatus.BAD_REQUEST,
-				"Ongoing or completed appointments cannot be cancelled",
-			);
-		}
-
-		const updatedAppointment = await tx.appointment.update({
-			where: {
-				id: existingAppointment.id,
-			},
-			data: {
-				status: "CANCELLED",
-			},
-		});
-
-		await tx.schedule.update({
-			where: {
-				id: existingAppointment.schedule.id,
-			},
-			data: {
-				availableSlots: { increment: 1 },
-			},
-		});
-
-		// refund process
-
-		const now = new Date();
-
-		const startDateTime = existingAppointment.schedule.startDateTime;
-		// 2.00pm => 1.00pm
-		const refundCutOffTime = subHours(startDateTime, 1);
-
-		const isEligibleForRefund = isBefore(now, refundCutOffTime);
-
-		if (isEligibleForRefund) {
-			const bkashIdToken = await getBkashIdToken();
-
-			if (!bkashIdToken) {
+			if (
+				existingAppointment.status === "ONGOING" ||
+				existingAppointment.status === "COMPLETED"
+			) {
 				throw new AppError(
-					httpStatus.BAD_GATEWAY,
-					"Bkash access token not found",
+					httpStatus.BAD_REQUEST,
+					"Ongoing or completed appointments cannot be cancelled",
 				);
 			}
-			const bkashRefundPaymentRes = await fetch(
-				`${config.bkash_base_url}/tokenized/checkout/payment/refund`,
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-						Accept: "application/json",
-						authorization: bkashIdToken,
-						"x-app-key": config.bkash_app_key,
-					},
-					body: JSON.stringify({
-						paymentID: existingAppointment.payment?.paymentID,
-						trxID: existingAppointment.payment?.trxID,
-						amount: existingAppointment.payment?.amount?.toString(),
-						sku: "Appointment Cancellation",
-						reason: "Patient cancelled the appointment",
-					}),
+
+			const updatedAppointment = await tx.appointment.update({
+				where: {
+					id: existingAppointment.id,
 				},
-			);
+				data: {
+					status: "CANCELLED",
+				},
+			});
 
-			const bkashRefundPaymentResult = await bkashRefundPaymentRes.json();
+			await tx.schedule.update({
+				where: {
+					id: existingAppointment.schedule.id,
+				},
+				data: {
+					availableSlots: { increment: 1 },
+				},
+			});
 
-			await tx.payment.update({
+			// refund process
+
+			const now = new Date();
+
+			const startDateTime = existingAppointment.schedule.startDateTime;
+			// 2.00pm => 1.00pm
+			const refundCutOffTime = subHours(startDateTime, 1);
+
+			const isEligibleForRefund = isBefore(now, refundCutOffTime);
+
+			if (isEligibleForRefund) {
+				const bkashIdToken = await getBkashIdToken();
+
+				if (!bkashIdToken) {
+					throw new AppError(
+						httpStatus.BAD_GATEWAY,
+						"Bkash access token not found",
+					);
+				}
+				const bkashRefundPaymentRes = await fetch(
+					`${config.bkash_base_url}/tokenized/checkout/payment/refund`,
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Accept: "application/json",
+							authorization: bkashIdToken,
+							"x-app-key": config.bkash_app_key,
+						},
+						body: JSON.stringify({
+							paymentID: existingAppointment.payment?.paymentID,
+							trxID: existingAppointment.payment?.trxID,
+							amount: existingAppointment.payment?.amount?.toString(),
+							sku: "Appointment Cancellation",
+							reason: "Patient cancelled the appointment",
+						}),
+					},
+				);
+
+				const bkashRefundPaymentResult = await bkashRefundPaymentRes.json();
+
+				await tx.payment.update({
+					where: {
+						appointmentId: existingAppointment.id,
+					},
+					data: {
+						status: "REFUNDED",
+						refundTrxId: bkashRefundPaymentResult.refundTrxID,
+						refundedAt: bkashRefundPaymentResult.completedTime,
+						refundAmount: bkashRefundPaymentResult.amount,
+						refundReason: "Patient cancelled the appointment",
+						gatwayRespone: bkashRefundPaymentResult,
+					},
+				});
+			}
+
+			const newPaymentInfo = await prisma.payment.findUnique({
 				where: {
 					appointmentId: existingAppointment.id,
 				},
-				data: {
-					status: "REFUNDED",
-					refundTrxId: bkashRefundPaymentResult.refundTrxID,
-					refundedAt: bkashRefundPaymentResult.completedTime,
-					refundAmount: bkashRefundPaymentResult.amount,
-					refundReason: "Patient cancelled the appointment",
-					gatwayRespone: bkashRefundPaymentResult,
-				},
 			});
-		}
 
-		const newPaymentInfo = await prisma.payment.findUnique({
-			where: {
-				appointmentId: existingAppointment.id,
-			},
-		});
-
-		return {
-			appointment: updatedAppointment,
-			payment: newPaymentInfo,
-		};
-	});
+			return {
+				appointment: updatedAppointment,
+				payment: newPaymentInfo,
+			};
+		},
+		{ maxWait: 5000, timeout: 30000 },
+	);
 
 	return transactionResult;
 };
