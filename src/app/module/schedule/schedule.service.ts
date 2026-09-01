@@ -1,12 +1,11 @@
 import {
 	addDays,
 	differenceInMinutes,
-	endOfDay,
 	isAfter,
 	isSameDay,
-	nextDay,
 	startOfDay,
 } from "date-fns";
+
 import { prisma } from "../../lib/prisma";
 import { RequestUser } from "../../middleware/checkAuth";
 import { AppError } from "../../utils/AppError";
@@ -33,6 +32,10 @@ const createSchedule = async (
 		throw new AppError(httpStatus.NOT_FOUND, "Doctor Profile not exists");
 	}
 
+	if (doctor.verificationStatus !== "APPROVED") {
+		throw new AppError(httpStatus.FORBIDDEN, "Doctor is not Verified");
+	}
+
 	if (!isSameDay(payload.startDateTime, payload.endDateTime)) {
 		throw new AppError(
 			httpStatus.CONFLICT,
@@ -50,7 +53,7 @@ const createSchedule = async (
 	const startOfTheDay = startOfDay(payload.startDateTime); // 29 august => 12.00 am
 	const startOfNextDay = addDays(startOfTheDay, 1); // 30 august => 12.00 am
 
-	const existingScheduleOnThisDate = await prisma.appointment.findFirst({
+	const existingScheduleOnThisDate = await prisma.schedule.findFirst({
 		where: {
 			doctorId: doctor.id,
 			isDeleted: false,
@@ -69,12 +72,19 @@ const createSchedule = async (
 	}
 
 	const duriationInMinutes = differenceInMinutes(
-		payload.startDateTime,
 		payload.endDateTime,
+		payload.startDateTime,
 	);
 	const MINS_PER_SLOT = 20;
 
 	const totalSlots = Math.floor(duriationInMinutes / MINS_PER_SLOT);
+
+	if (totalSlots < 1) {
+		throw new AppError(
+			httpStatus.BAD_REQUEST,
+			`Schedule duration must be at least ${MINS_PER_SLOT} minutes`,
+		);
+	}
 
 	const schedule = await prisma.schedule.create({
 		data: {
@@ -523,9 +533,12 @@ const getTodaySchedule = async (query: IScheduleQuery) => {
 	const sortBy = query.sortBy ? query.sortBy : "createdAt";
 	const sortOrder = query.sortOrder ? query.sortOrder : "desc";
 
+	// 1. Get current moment in UTC
 	const now = new Date();
+
 	const startOfToday = startOfDay(now);
-	const startOfNextDay = nextDay(startOfToday, 1);
+
+	const startOfNextDay = addDays(startOfToday, 1);
 
 	const andConditions: ScheduleWhereInput[] = [
 		{

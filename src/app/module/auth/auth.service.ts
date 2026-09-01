@@ -320,7 +320,10 @@ const refreshToken = async (token: string) => {
 	});
 
 	if (!user || user.isDeleted || user.status !== UserStatus.ACTIVE) {
-		throw new AppError(httpStatus.UNAUTHORIZED, "User is inactive or not found");
+		throw new AppError(
+			httpStatus.UNAUTHORIZED,
+			"User is inactive or not found",
+		);
 	}
 
 	const jwtPayload = {
@@ -359,7 +362,10 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
 		googleIdTokenPayload = ticket.getPayload();
 	} catch (error) {
 		console.log("Google id token verification failed", error);
-		throw new AppError(httpStatus.UNAUTHORIZED, "Invalid or Expired Google id token");
+		throw new AppError(
+			httpStatus.UNAUTHORIZED,
+			"Invalid or Expired Google id token",
+		);
 	}
 
 	if (!googleIdTokenPayload) {

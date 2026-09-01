@@ -19,7 +19,6 @@ import { RequestUser } from "../../middleware/checkAuth";
 import { DoctorWhereInput } from "../../../generated/prisma/models";
 import { AppError } from "../../utils/AppError";
 import httpStatus from "http-status";
-import { IQuery } from "../../../interface";
 import { addDays, startOfDay } from "date-fns";
 
 const applyAsDoctor = async (

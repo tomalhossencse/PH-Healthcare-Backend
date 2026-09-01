@@ -23,7 +23,7 @@ export default {
 	tester_admin_password: process.env.TESTER_ADMIN_PASSWORD!,
 	tester_doctor_name: process.env.TESTER_DOCTOR_NAME!,
 	tester_doctor_email: process.env.TESTER_DOCTOR_EMAIL!,
-	tester_doctor_password: process.env.TESTER_ADMIN_PASSWORD!,
+	tester_doctor_password: process.env.TESTER_DOCTOR_PASSWORD!,
 	radis_username: process.env.RADIS_USERNAME!,
 	radis_password: process.env.RADIS_PASSWORD!,
 	radis_host: process.env.RADIS_HOST!,

@@ -51,8 +51,11 @@ const createPrescription = async (
 	}
 
 	// make pdf
-
-	const pdfDocument = new PDFDocument({ margin: 50 });
+	// 1. Initialize Document
+	const pdfDocument = new PDFDocument({
+		margin: 50,
+		size: "A4",
+	});
 
 	const pdfChuncks: Buffer[] = [];
 
@@ -60,41 +63,241 @@ const createPrescription = async (
 		pdfChuncks.push(chunk);
 	});
 
-	const pdfReadyPromise = new Promise<Buffer>((reslove) => {
+	const pdfReadyPromise = new Promise<Buffer>((resolve) => {
 		pdfDocument.on("end", () => {
-			reslove(Buffer.concat(pdfChuncks));
+			resolve(Buffer.concat(pdfChuncks));
 		});
 	});
-	// write pdf
-	pdfDocument.fontSize(20).text("PH Healthcare System", { align: "center" });
 
-	pdfDocument.fontSize(14).text("Prescription", { align: "center" });
+	// Helper: Horizontal Divider
+	const drawDivider = (y?: number) => {
+		const currentY = y || pdfDocument.y;
+		pdfDocument
+			.strokeColor("#E2E8F0")
+			.lineWidth(1)
+			.moveTo(50, currentY)
+			.lineTo(545, currentY)
+			.stroke();
+	};
+
+	// ==========================================
+	// HEADER SECTION
+	// ==========================================
+	pdfDocument
+		.fillColor("#0284C7")
+		.fontSize(22)
+		.font("Helvetica-Bold")
+		.text("PH Healthcare System", 50, 40, { align: "left" });
+
+	pdfDocument
+		.fillColor("#64748B")
+		.fontSize(10)
+		.font("Helvetica")
+		.text("Medical Prescription & Care Plan", 50, 67, { align: "left" });
+
+	pdfDocument
+		.fillColor("#0F172A")
+		.fontSize(10)
+		.font("Helvetica-Bold")
+		.text(
+			`Date: ${new Date().toLocaleDateString("en-US", { dateStyle: "medium" })}`,
+			400,
+			45,
+			{ align: "right" },
+		);
+
 	pdfDocument.moveDown(2);
+	drawDivider(88);
 
-	pdfDocument.fontSize(12).text(`Patient Name : ${appointment.patient.name}`);
-	pdfDocument.fontSize(12).text(`Patient Email : ${appointment.patient.email}`);
-	pdfDocument.moveDown(2);
+	// ==========================================
+	// PATIENT & DOCTOR INFORMATION GRID
+	// ==========================================
+	const infoStartY = 105;
 
-	pdfDocument.text(`Doctor Name : ${doctor.name}`);
-	pdfDocument.text(`Doctor Specialization : ${doctor.email}`);
-	pdfDocument.moveDown(2);
+	// Doctor Details (Left Column)
+	pdfDocument
+		.fillColor("#0369A1")
+		.fontSize(11)
+		.font("Helvetica-Bold")
+		.text("DOCTOR DETAILS", 50, infoStartY);
 
-	pdfDocument.fontSize(14).text("Findings");
-	pdfDocument.fontSize(12).text(payload.findings);
-	pdfDocument.moveDown(2);
+	pdfDocument
+		.fillColor("#0F172A")
+		.fontSize(10)
+		.font("Helvetica-Bold")
+		.text(`Dr. ${doctor.name || "N/A"}`, 50, infoStartY + 18);
 
-	pdfDocument.fontSize(14).text("Medicines");
-	pdfDocument.moveDown(0.5);
+	pdfDocument
+		.fillColor("#475569")
+		.fontSize(9)
+		.font("Helvetica")
+		.text(`Email: ${doctor.email || "N/A"}`, 50, infoStartY + 32);
+
+	// Patient Details (Right Column)
+	pdfDocument
+		.fillColor("#0369A1")
+		.fontSize(11)
+		.font("Helvetica-Bold")
+		.text("PATIENT DETAILS", 320, infoStartY);
+
+	pdfDocument
+		.fillColor("#0F172A")
+		.fontSize(10)
+		.font("Helvetica-Bold")
+		.text(appointment.patient?.name || "N/A", 320, infoStartY + 18);
+
+	pdfDocument
+		.fillColor("#475569")
+		.fontSize(9)
+		.font("Helvetica")
+		.text(
+			`Email: ${appointment.patient?.email || "N/A"}`,
+			320,
+			infoStartY + 32,
+		);
+
+	pdfDocument.y = infoStartY + 60;
+	drawDivider();
+
+	// ==========================================
+	// FINDINGS / DIAGNOSIS SECTION
+	// ==========================================
+	pdfDocument.moveDown(1.2);
+	pdfDocument
+		.fillColor("#0F172A")
+		.fontSize(12)
+		.font("Helvetica-Bold")
+		.text("Clinical Findings & Diagnosis");
+
+	pdfDocument.moveDown(0.4);
+
+	// Background card for findings
+	const findingsY = pdfDocument.y;
+	const findingsText = payload.findings || "No specific findings recorded.";
+	const findingsHeight =
+		pdfDocument.heightOfString(findingsText, { width: 475 }) + 16;
+
+	pdfDocument
+		.roundedRect(50, findingsY, 495, findingsHeight, 6)
+		.fill("#F8FAFC");
+
+	pdfDocument
+		.fillColor("#334155")
+		.fontSize(9.5)
+		.font("Helvetica")
+		.text(findingsText, 60, findingsY + 8, {
+			width: 475,
+			lineGap: 4,
+		});
+
+	pdfDocument.y = findingsY + findingsHeight + 15;
+
+	// ==========================================
+	// MEDICINES / PRESCRIPTION SECTION
+	// ==========================================
+	pdfDocument
+		.fillColor("#0F172A")
+		.fontSize(12)
+		.font("Helvetica-Bold")
+		.text("Prescribed Medicines (Rx)");
+
+	pdfDocument.moveDown(0.6);
+
+	// Table Header Bar
+	const tableHeaderY = pdfDocument.y;
+	pdfDocument.rect(50, tableHeaderY, 495, 24).fill("#0284C7");
+
+	pdfDocument
+		.fillColor("#FFFFFF")
+		.fontSize(9)
+		.font("Helvetica-Bold")
+		.text("#", 60, tableHeaderY + 7, { width: 20 })
+		.text("MEDICINE NAME", 85, tableHeaderY + 7, { width: 180 })
+		.text("DOSAGE", 270, tableHeaderY + 7, { width: 110 })
+		.text("DURATION", 385, tableHeaderY + 7, { width: 150 });
+
+	let currentY = tableHeaderY + 28;
 
 	payload.medicines.forEach((medicine, i) => {
-		PDFDocument.fontSize(12).text(`${i + 1}.${medicine.name}`);
-		PDFDocument.text(`  Dosage : ${medicine.dosage}`);
-		PDFDocument.text(`  Duration : ${medicine.duration}`);
-		if (medicine.instructions) {
-			PDFDocument.text(`  Instructions : ${medicine.instructions}`);
+		const isEven = i % 2 === 0;
+		const rowHeight = medicine.instructions ? 36 : 24;
+
+		// Row Background
+		if (isEven) {
+			pdfDocument.rect(50, currentY - 4, 495, rowHeight).fill("#F1F5F9");
 		}
-		pdfDocument.moveDown(0.5);
+
+		// Main Row Values
+		pdfDocument
+			.fillColor("#0F172A")
+			.fontSize(9.5)
+			.font("Helvetica-Bold")
+			.text(`${i + 1}.`, 60, currentY, { width: 20 })
+			.text(medicine.name, 85, currentY, { width: 180 });
+
+		pdfDocument
+			.font("Helvetica")
+			.fillColor("#334155")
+			.text(medicine.dosage, 270, currentY, { width: 110 })
+			.text(medicine.duration, 385, currentY, { width: 150 });
+
+		// Optional Instructions Sub-row
+		if (medicine.instructions) {
+			currentY += 14;
+			pdfDocument
+				.fillColor("#64748B")
+				.fontSize(8.5)
+				.font("Helvetica-Oblique")
+				.text(`Instruction: ${medicine.instructions}`, 85, currentY, {
+					width: 440,
+				});
+		}
+
+		currentY += 16;
 	});
+
+	// ==========================================
+	// FOOTER / SIGNATURE SECTION
+	// ==========================================
+	const footerY = 730;
+
+	drawDivider(footerY - 30);
+
+	// Doctor Signature Placeholder
+	pdfDocument
+		.strokeColor("#CBD5E1")
+		.lineWidth(1)
+		.moveTo(380, footerY + 25)
+		.lineTo(525, footerY + 25)
+		.stroke();
+
+	pdfDocument
+		.fillColor("#0F172A")
+		.fontSize(9)
+		.font("Helvetica-Bold")
+		.text(`Dr. ${doctor.name || ""}`, 380, footerY + 30, {
+			align: "center",
+			width: 145,
+		})
+		.font("Helvetica")
+		.fillColor("#64748B")
+		.fontSize(8)
+		.text("Authorized Signature", 380, footerY + 42, {
+			align: "center",
+			width: 145,
+		});
+
+	// Bottom System Note
+	pdfDocument
+		.fillColor("#94A3B8")
+		.fontSize(8)
+		.font("Helvetica")
+		.text(
+			"This prescription is digitally generated by PH Healthcare System.",
+			50,
+			footerY + 42,
+			{ align: "left" },
+		);
 
 	pdfDocument.end();
 

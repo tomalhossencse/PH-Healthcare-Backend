@@ -23,9 +23,9 @@ const main = async () => {
 		await transporter.verify();
 		console.log("❤️ Nodemailer connected successfully");
 
-		// await seedSuperAdmin();
-		// await seedTesterAdmin();
-		// await seedTesterDoctor();
+		await seedSuperAdmin();
+		await seedTesterAdmin();
+		await seedTesterDoctor();
 
 		await deleteUnverifiedDoctors();
 		await deleteRejectedDoctors();

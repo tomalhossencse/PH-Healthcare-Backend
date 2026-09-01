@@ -144,6 +144,7 @@ export const seedTesterDoctor = async () => {
 						qualifications: "MBBS",
 						specialization: "Neurology",
 						licenseNumber: "BMDC00",
+						verificationStatus: "APPROVED",
 					},
 				},
 			},
