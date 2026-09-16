@@ -11,7 +11,7 @@ import {
 	IPayAppointment,
 	IUpdateAppointment,
 } from "./appointment.interface";
-import { addMinutes, isBefore, isSameDay, subHours } from "date-fns";
+import { addMinutes, isBefore, subHours } from "date-fns";
 import ejs from "ejs";
 import { transporter } from "../../lib/nodemailer";
 import path from "path";
@@ -644,7 +644,7 @@ const cancelAppointment = async (payload: IPayAppointment) => {
 					refundedAt: bkashRefundResult.completedTime,
 					refundAmount: bkashRefundResult.amount,
 					refundReason: "Patient cancelled the appointment",
-					gatewayRespone: bkashRefundResult,
+					gatwayRespone: bkashRefundResult,
 				},
 			});
 		}
