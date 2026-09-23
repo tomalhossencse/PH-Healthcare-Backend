@@ -193,6 +193,17 @@ const uploadProfileImg = catchAsync(async (req: Request, res: Response) => {
 	});
 });
 
+const logout = catchAsync(async (req: Request, res: Response) => {
+	res.clearCookie("accessToken");
+	res.clearCookie("refreshToken");
+	sendResponse(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "User Logout Succesfully",
+		data: null,
+	});
+});
+
 export const AuthController = {
 	registerPatient,
 	verifyPatient,
@@ -203,4 +214,5 @@ export const AuthController = {
 	forgetPassword,
 	resetPassword,
 	uploadProfileImg,
+	logout,
 };

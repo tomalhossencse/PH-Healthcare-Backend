@@ -55,4 +55,6 @@ router.patch(
 	AuthController.uploadProfileImg,
 );
 
+router.post("/logout", AuthController.logout);
+
 export const AuthRoutes = router;
