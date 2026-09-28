@@ -101,20 +101,11 @@ const applyAsDoctor = async (
         }),
     );
 
-    const randomPassword = Math.random().toString(36).slice(-8);
-
-    const hashPassword = await bcrypt.hash(
-        randomPassword,
-        Number(config.bcrypt_salt_rounds),
-    );
-
     const doctorApplication = await prisma.user.create({
         data: {
             ...payload.user,
             role: "DOCTOR",
             needPasswordChange: true,
-            password: hashPassword,
-
             doctor: {
                 create: {
                     name: payload.user.name,
@@ -282,6 +273,13 @@ const approveDoctor = async (
         );
     }
 
+    const randomPassword = "Ph@" + Math.random().toString(36).slice(-8);
+
+    const hashPassword = await bcrypt.hash(
+        randomPassword,
+        Number(config.bcrypt_salt_rounds),
+    );
+
     const updatedDoctor = await prisma.doctor.update({
         where: {
             id: doctorId,
@@ -292,6 +290,11 @@ const approveDoctor = async (
                 verificationStatus === "REJECTED" ? rejectReason : null,
             reviewedBy: reviewer.userId,
             reviewedAt: new Date(),
+            user: {
+                update: {
+                    password: hashPassword,
+                },
+            },
         },
         include: {
             user: true,
@@ -308,7 +311,7 @@ const approveDoctor = async (
     const templateData = {
         name: updatedDoctor.name,
         email: updatedDoctor.email,
-        password: updatedDoctor.user.password,
+        password: randomPassword,
         reason: updatedDoctor.rejectionReason,
     };
 
