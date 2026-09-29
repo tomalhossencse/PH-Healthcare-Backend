@@ -173,8 +173,9 @@ const uploadProfileImg = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-	res.clearCookie("accessToken");
-	res.clearCookie("refreshToken");
+	const baseOptions = getCookieOptions();
+	res.clearCookie("accessToken", baseOptions);
+	res.clearCookie("refreshToken", baseOptions);
 	sendResponse(res, {
 		statusCode: httpStatus.OK,
 		success: true,
