@@ -477,8 +477,8 @@ const getAvailableDoctorByTodaysSchedule = async (query: IDoctorQuery) => {
 					startDateTime: {
 						gte: startOfToday,
 						lt: startOfNextDay,
-						gt: now,
 					},
+					endDateTime: { gt: now },
 				},
 			},
 		},

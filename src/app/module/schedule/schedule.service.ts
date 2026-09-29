@@ -551,11 +551,10 @@ const getTodaySchedule = async (query: IScheduleQuery) => {
 			status: "PUBLISHED",
 		},
 		{
-			startDateTime: { gte: startOfToday, lt: startOfNextDay, gt: now },
+			startDateTime: { gte: startOfToday, lt: startOfNextDay },
 		},
-		{
-			availableSlots: { gt: 0 },
-		},
+		{ endDateTime: { gt: now } },
+		{ availableSlots: { gt: 0 } },
 	];
 
 	const schedules = await prisma.schedule.findMany({
